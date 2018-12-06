@@ -1,5 +1,5 @@
 #include "PCR_Class.h"
-#include "PCR_Device_functions.cuh"
+#include "PCR_Device_Functions.cuh"
 
 
 int count_iter(int bin) {
