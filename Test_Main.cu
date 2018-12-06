@@ -35,16 +35,12 @@ double averarr(double *arr, int Nx) {
     return v / double(Nx);
 }
 
-int main( ) {
+int Test(size_t diagonal_size) {
 
     std::chrono::time_point<std::chrono::system_clock> tstart, tend;
-    std::chrono::duration<double> duration;    
-    size_t diagonal_size = 1000;
+    std::chrono::duration<double> duration;
     
     PCR_Solver crs = PCR_Solver(diagonal_size);
-    
-    //Generate sampel data
-    srand (time(NULL));
     
     thrust::device_vector<float> alist(diagonal_size);
     thrust::device_vector<float> blist(diagonal_size);
@@ -70,6 +66,7 @@ int main( ) {
     double *gputimes = new double[trynumber];
     double *cputimes = new double[trynumber]; 
 
+    double v = -1.0;
     for(int count=0; count<trynumber; count++) {
         for (int i=0; i < diagonal_size; i++) {
             alist[i] = -1.0+0.1*float(rand()) / float(RAND_MAX);
@@ -102,15 +99,19 @@ int main( ) {
         cputimes[count] = duration.count();
 
         for (size_t it=0; it<Nx; it++) {
-            if(fabs(old[it] - xlist[it]) > 1.0e-6) {
-                std::cout << old[it] << " " << xlist[it] << ": " << fabs(old[it] - xlist[it]) << std::endl;
+            if(fabs(old[it] - xlist[it]) > v) {
+                v = fabs(old[it] - xlist[it]);
             }
         }
     }
 
+    std::cout << "Diagonal size: " << diagonal_size << std::endl;
+    std::cout << "Max deviation: " << v << std::endl;
+    std::cout << "gpu v.s. cpu" << std::endl;
     std::cout << "maximum: " << maxarr(gputimes, trynumber) << " <> " << maxarr(cputimes, trynumber) << std::endl;
     std::cout << "minimum: " << minarr(gputimes, trynumber) << " <> " << minarr(cputimes, trynumber) << std::endl;
     std::cout << "average: " << averarr(gputimes, trynumber) << " <> " << averarr(cputimes, trynumber) << std::endl;
+    std::cout << std::endl;
 
     delete []a;
     delete []b;
@@ -121,5 +122,15 @@ int main( ) {
     delete []cputimes;
 
     return 0;
+}
 
+int main() {
+    //Generate sampel data
+    srand (time(NULL));
+    std::cout << "Test of the accuracy and efficiency of two algorithms that solves the tridiagonal matrix." << std::endl;
+    Test(10);
+    Test(100);
+    Test(1000);
+    Test(5000);
+    return 0;
 }
