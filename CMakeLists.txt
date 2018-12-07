@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.0)
 project(cuda_test)
 
-find_package(CUDA REQUIRED)
-list(APPEND CUDA_NVCC_FLAGS "-std=c++11") 
-include_directories(${CUDA_INCLUDE_DIRS})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-CUDA_ADD_EXECUTABLE(test_cuda Test_Main.cu PCR_Class.cu PCR_Device_Functions.cu)
-set_property(TARGET test_cuda PROPERTY CUDA_STANDARD 11)
-target_link_libraries(test_cuda ${CUDA_cusparse_LIBRARY} )
+set (CMAKE_CXX_STANDARD 11)
 
-# set_property(TARGET test_cuda PROPERTY CXX_STANDARD 11)
+# add_subdirectory(./pcr)
+add_subdirectory(./tdma)
+
+add_subdirectory(./test/tdma-only)
