@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.5)
 project(pcr VERSION 1.0.0 LANGUAGES CXX)
 
-#Make sure that custom modules like FindRapidJSON are found
+#Make sure that custom modules like CUDA are found
 list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 
 ##############################################
 # Declare dependencies
+find_package(CUDA REQUIRED)
+include_directories(${CUDA_INCLUDE_DIRS})
 
 ##############################################
 # Create target and set properties
@@ -25,6 +27,10 @@ target_include_directories(pcr
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
+target_link_libraries(pcr
+    PUBLIC
+        ${CUDA_cusparse_LIBRARY}
+)
 target_compile_features(pcr INTERFACE cxx_auto_type)
 
 ##############################################

@@ -4,8 +4,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include "PCR_Class.h"
-#include "tdma.h"
+#include "pcr/PCR_Class.h"
+#include "tdma/tdma.h"
 
 double maxarr(double *arr, int Nx) {
     double v = arr[0];
