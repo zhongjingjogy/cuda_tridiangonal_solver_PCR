@@ -4,9 +4,30 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include "pcr/PCR_Class.h"
-#include "tdma/tdma.h"
+#include "PCR_Class.h"
+#include "tdma.h"
 #include "utils.h"
+
+float GpuResultCheck(float *a, float *b, float *c, float *rhs, float *old, int Nx) {
+    float v = -1.0;
+    float v1 = fabs(b[0] * old[0] + c[0] * old[1] - rhs[0]);
+    if (v < v1) {
+        v = v1;
+    }
+    for (int nx = 1; nx < Nx - 1; nx++) {
+        v1 = fabs(a[nx] * old[nx - 1] + b[nx] * old[nx] + c[nx] * old[nx + 1] -
+                  rhs[nx]);
+        if (v < v1) {
+            v = v1;
+        }
+    }
+    v1 = fabs(b[Nx - 1] * old[Nx - 1] + a[Nx - 1] * old[Nx - 2] - rhs[Nx - 1]);
+    if (v < v1) {
+        v = v1;
+    }
+
+    return v;
+}
 
 int Test(size_t diagonal_size) {
     std::chrono::time_point<std::chrono::system_clock> tstart, tend;
@@ -34,6 +55,13 @@ int Test(size_t diagonal_size) {
     rhs = new double[Nx];
     old = new double[Nx];
 
+    float *ma, *mb, *mc, *mrhs, *mx;
+    ma = new float[Nx];
+    mb = new float[Nx];
+    mc = new float[Nx];
+    mrhs = new float[Nx];
+    mx = new float[Nx];
+
     int trynumber = 100;
     double *gputimes = new double[trynumber];
     double *cputimes = new double[trynumber];
@@ -47,32 +75,44 @@ int Test(size_t diagonal_size) {
             clist[i] = -1.0 + 0.1 * float(rand()) / float(RAND_MAX);
             dlist[i] = 1.0 + 10.0 * float(rand()) / float(RAND_MAX);
             xlist[i] = 0.0f;
-            a[i] = alist[i];
-            b[i] = blist[i];
-            c[i] = clist[i];
-            rhs[i] = dlist[i];
-            old[i] = xlist[i];
+
+            ma[i] = alist[i];
+            mb[i] = blist[i];
+            mc[i] = clist[i];
+            mrhs[i] = dlist[i];
+            mx[i] = xlist[i];
+
+            a[i] = double(ma[i]);
+            b[i] = double(mb[i]);
+            c[i] = double(mc[i]);
+            rhs[i] = double(mrhs[i]);
+            old[i] = double(mx[i]);
         }
 
         a[0] = double(0.0);
         c[Nx - 1] = double(0.0);
         alist[0] = float(0.0);
         clist[diagonal_size - 1] = float(0.0);
+        ma[0] = float(0.0);
+        mc[diagonal_size-1] = float(0.0);
 
         tstart = std::chrono::system_clock::now();
         crs.Solve(ptr_alist, ptr_blist, ptr_clist, ptr_dlist, ptr_xlist);
         tend = std::chrono::system_clock::now();
         duration = tend - tstart;
         gputimes[count] = duration.count();
+        for (int i = 0; i < diagonal_size; i++) {
+            mx[i] = xlist[i];
+        }
         gpuresultcheck[count] =
-            ResultCheckGpu(alist, blist, clist, dlist, xlist, diagonal_size) < 1.0e-5;
+            GpuResultCheck(ma, mb, mc, mrhs, mx, diagonal_size) < 1.0e-4;
 
         tstart = std::chrono::system_clock::now();
-        TDMA(a, b, c, rhs, old, Nx);
+        TDMA<double>(a, b, c, rhs, old, Nx);
         tend = std::chrono::system_clock::now();
         duration = tend - tstart;
         cputimes[count] = duration.count();
-        cpuresultcheck[count] = ResultCheckCpu(a, b, c, rhs, old, Nx) < 1.0e-15;
+        cpuresultcheck[count] = CpuResultCheck(a, b, c, rhs, old, Nx) < 1.0e-10;
     }
 
     std::cout << "Diagonal size: " << diagonal_size << std::endl;
@@ -91,6 +131,11 @@ int Test(size_t diagonal_size) {
     delete[] c;
     delete[] rhs;
     delete[] old;
+    delete[] ma;
+    delete[] mb;
+    delete[] mc;
+    delete[] mrhs;
+    delete[] mx;
     delete[] gputimes;
     delete[] cputimes;
     delete[] cpuresultcheck;

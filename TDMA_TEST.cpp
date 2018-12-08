@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
-#include "tdma/tdma.h"
+#include "tdma.h"
 #include "utils.h"
 
 int Test1() {

@@ -1,5 +1,5 @@
 #include <cstdio>
-#include "pcr/PCR_Device_Functions.cuh"
+#include "PCR_Device_Functions.cuh"
 
 __global__ void list_print(int nmax, float * in) {
     int i = blockIdx.x*blockDim.x + threadIdx.x;
