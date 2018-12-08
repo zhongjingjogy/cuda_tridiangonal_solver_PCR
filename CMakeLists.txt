@@ -9,5 +9,5 @@ set (CMAKE_CXX_STANDARD 11)
 
 # add_subdirectory(./pcr)
 add_subdirectory(./tdma)
-
+add_subdirectory(./utils)
 add_subdirectory(./test/tdma-only)
